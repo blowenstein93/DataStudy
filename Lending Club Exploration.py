@@ -96,6 +96,8 @@ typedDf = dummiedGradesDf
 import matplotlib.pyplot as plt
 sb.jointplot(x="funded_amnt", y="int_rate", data = typedDf, kind="hex", height =8)
 
+#looks like there is some sort of upper bound on loan size at 35k - this could be due to lending club rules.
+
 
 # #### not surprising that annual income is highly skewed... lets reduce skew
 
@@ -112,11 +114,13 @@ incomeFilter = typedDf[typedDf["annual_inc"] < 300000]
 sb.distplot(incomeFilter["annual_inc"].dropna())
 
 
-# In[15]:
+# In[82]:
 
 
 import matplotlib.pyplot as plt
-sb.jointplot(x="funded_amnt", y="annual_inc", data = incomeFilter, kind="hex", height = 8)
+sb.jointplot(x="annual_inc", y="funded_amnt", data = incomeFilter, kind="hex", height = 8)
+
+#notice tendency of higher incomes to take larger loans as evidenced by emptiness of top left quartile.
 
 
 # ### Look at Correlations
@@ -135,13 +139,13 @@ sb.heatmap(typedDf[["loan_amnt", "funded_amnt",
 
 # ### look at distributions
 
-# In[17]:
+# In[78]:
 
 
 ### everything is skewed right, except grade which is perfectly balanced
 ### DTI seems to have an outlier, or is 9999 a null placeholder ?
 normalized = typedDf.copy(deep = True)
-normalized.describe()
+normalized.drop(columns = ["member_id"]).describe()
 
 
 # In[18]:
@@ -263,7 +267,7 @@ shortTerm = shortTerm[(shortTerm["loan_status"] == "Fully Paid") | (shortTerm["l
 shortTerm.head()
 
 
-# #### Pct loans fully paid ?
+# #### Pct loans fully paid
 
 # In[32]:
 
@@ -299,7 +303,7 @@ as this is slightly larger than the non-weighted pct of loans, we conclude the
 loans that pay off fully are higher balance than average""".format(wavgLoanPaidOff.round(4)))
 
 
-# #### highest rates of default ? 
+# #### highest rates of default
 
 # In[37]:
 
@@ -319,10 +323,15 @@ defaultDf["defaulted"] = (statusDummies[["Fully Paid"]] * - 1) + 1
 
 defaultGroupings = defaultDf.groupby(['origYear', 'grade']).mean()
 cohorts = defaultGroupings.sort_values(by = "defaulted", ascending = False)
-#defaultGroupings.unstack()
 maxDefaults = cohorts.iloc[:1,]
 print(maxDefaults)
 print("the highest default rate of 0.48 was found among 2008 G's !")
+
+
+# In[81]:
+
+
+defaultGroupings.unstack()
 
 
 # In[40]:
@@ -356,7 +365,7 @@ rateReturn["annualizedRateReturn"] = np.power((rateReturn["total_pymnt"] / rateR
 rateReturn = rateReturn[["annualizedRateReturn", "origYear", "grade"]]
 
 
-# In[44]:
+# In[80]:
 
 
 rateReturn.head()
