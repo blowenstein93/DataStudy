@@ -144,7 +144,7 @@ normalized = typedDf.copy(deep = True)
 normalized.describe()
 
 
-# In[26]:
+# In[18]:
 
 
 #looks like dti= 9999 is a null placeholder because there are few values between ~ 1000 and that 9999 value
@@ -152,21 +152,21 @@ dti = typedDf[["dti"]]
 boxplot = dti.boxplot(column=['dti'])
 
 
-# In[27]:
+# In[19]:
 
 
 #looks much better if we remove 9999 - still heavily skewed though.
 dti[dti["dti"] < 900 ].boxplot(column=['dti'])
 
 
-# In[29]:
+# In[20]:
 
 
 # much nicer if we remove outliers ( > 300)
 dti[dti["dti"] < 300 ].boxplot(column=['dti'])
 
 
-# In[31]:
+# In[21]:
 
 
 def normalize(df, col):
@@ -177,7 +177,7 @@ def normalize(df, col):
     return df
 
 
-# In[44]:
+# In[22]:
 
 
 normalizeDf = typedDf.copy(deep = True)
@@ -194,14 +194,14 @@ normalizeDf.boxplot(column=["loan_amnt", "funded_amnt", "int_rate", "annual_inc"
                                   "dti", "revol_bal", "total_pymnt", "grade"], figsize=(13,6))
 
 
-# In[105]:
+# In[23]:
 
 
 del normalized
 del normalizeDf
 
 
-# In[34]:
+# In[24]:
 
 
 #Confirms suspicions of bad skew.
@@ -210,14 +210,14 @@ typedDf[["loan_amnt", "funded_amnt", "int_rate", "annual_inc",
           "dti", "revol_bal", "total_pymnt", "grade"]].skew(axis = 0)
 
 
-# In[35]:
+# In[25]:
 
 
 hist = typedDf[" 60 months"].hist(bins=2)
 ## most loans are 36 month
 
 
-# In[36]:
+# In[26]:
 
 
 revolveStudy = typedDf.copy(deep = True)
@@ -225,7 +225,7 @@ revolveStudy["revol_bal"] = pd.cut(typedDf["revol_bal"], bins = [-2, 10000, 2500
 sb.catplot(x="revol_bal", kind="count", data=revolveStudy)
 
 
-# In[196]:
+# In[27]:
 
 
 sb.catplot(x="home_ownership", kind="count", data=typedDf)
@@ -234,20 +234,20 @@ sb.catplot(x="home_ownership", kind="count", data=typedDf)
 # # Part Two - Business Analysis
 # #### this did not say to balance weight, but this should be balance weighted
 
-# In[45]:
+# In[28]:
 
 
 ##only look at 36 month loans
 shortTerm = typedDf[typedDf[" 60 months"] == 0]
 
 
-# In[46]:
+# In[29]:
 
 
 shortTerm.loan_status.value_counts()
 
 
-# In[47]:
+# In[30]:
 
 
 ## only look at loans that are no longer alive 
@@ -257,7 +257,7 @@ shortTerm = shortTerm[(shortTerm["loan_status"] == "Fully Paid") | (shortTerm["l
                     (shortTerm["loan_status"] == "Default")]
 
 
-# In[48]:
+# In[31]:
 
 
 shortTerm.head()
@@ -265,33 +265,33 @@ shortTerm.head()
 
 # #### Pct loans fully paid ?
 
-# In[53]:
+# In[32]:
 
 
 relFreqs = shortTerm["loan_status"].value_counts() / shortTerm["loan_status"].dropna().size
 counts = shortTerm["loan_status"].value_counts()
-print("there are {} loans fully paid, which represents {} loans".format(counts[0], relFreqs[0]))
+print("there are {} loans fully paid, which represents {} loans".format(counts[0].round(4), relFreqs[0].round(4)))
 
 
-# In[54]:
+# In[33]:
 
 
 resultDf = pd.get_dummies(shortTerm["loan_status"])
 
 
-# In[55]:
+# In[34]:
 
 
 weightedPaidOff = (resultDf[["Fully Paid"]].astype(float).values *  shortTerm[["loan_amnt"]].astype(float).values).sum()
 
 
-# In[56]:
+# In[35]:
 
 
 wavgLoanPaidOff = weightedPaidOff / shortTerm[["loan_amnt"]].astype(float).values.sum()
 
 
-# In[57]:
+# In[36]:
 
 
 print("""The balance weighted avg of loans that paid off is {}, 
@@ -301,20 +301,20 @@ loans that pay off fully are higher balance than average""".format(wavgLoanPaidO
 
 # #### highest rates of default ? 
 
-# In[60]:
+# In[37]:
 
 
 defaultDf = shortTerm[["origYear", "grade", "loan_status", "loan_amnt"]]
 
 
-# In[82]:
+# In[38]:
 
 
 statusDummies = pd.get_dummies(defaultDf["loan_status"])
 defaultDf["defaulted"] = (statusDummies[["Fully Paid"]] * - 1) + 1
 
 
-# In[83]:
+# In[39]:
 
 
 defaultGroupings = defaultDf.groupby(['origYear', 'grade']).mean()
@@ -325,7 +325,7 @@ print(maxDefaults)
 print("the highest default rate of 0.48 was found among 2008 G's !")
 
 
-# In[96]:
+# In[40]:
 
 
 defaultDf["weightedAmnt"] = defaultDf["defaulted"].astype(float).values *  defaultDf["loan_amnt"].astype(float).values 
@@ -338,31 +338,31 @@ defaultWeighted.sort_values(by = "sum", ascending = False).head()
 
 # ### annualized rate of return
 
-# In[98]:
+# In[41]:
 
 
 rateReturn = shortTerm
 
 
-# In[99]:
+# In[42]:
 
 
 rateReturn["annualizedRateReturn"] = np.power((rateReturn["total_pymnt"] / rateReturn["funded_amnt"]), 1/3) - 1
 
 
-# In[100]:
+# In[43]:
 
 
 rateReturn = rateReturn[["annualizedRateReturn", "origYear", "grade"]]
 
 
-# In[101]:
+# In[44]:
 
 
 rateReturn.head()
 
 
-# In[102]:
+# In[45]:
 
 
 returnCohorts = rateReturn.groupby(['origYear', 'grade']).mean()
@@ -371,7 +371,7 @@ returnCohorts = returnCohorts.sort_values(by = "annualizedRateReturn", ascending
 
 # #### below is a summary of the annualized rate of return for each cohort (grouped by origination year and grade)
 
-# In[103]:
+# In[46]:
 
 
 rateReturn.groupby(['origYear', 'grade']).mean().unstack()
@@ -379,7 +379,7 @@ rateReturn.groupby(['origYear', 'grade']).mean().unstack()
 
 # # Part 3 - Modeling
 
-# In[237]:
+# In[47]:
 
 
 modelDf = typedDf.copy(deep = True)
@@ -388,26 +388,26 @@ modelDf.head()
 
 # let's get rid of outliers we detected in part 1
 
-# In[238]:
+# In[48]:
 
 
 modelDf = modelDf[modelDf["dti"] < 300]
 
 
-# In[239]:
+# In[49]:
 
 
 modelDf = modelDf[modelDf["annual_inc"] < 300000]
 
 
-# In[240]:
+# In[50]:
 
 
 balCuts = pd.cut(modelDf["revol_bal"], bins = [-2, 10000, 25000, 5000000], labels = ["low", "medium", "high"])
 modelDf = modelDf.join(pd.get_dummies(balCuts, prefix="revol_bal")).drop(columns = ["revol_bal"])
 
 
-# In[241]:
+# In[51]:
 
 
 modelDf = modelDf[(modelDf["loan_status"] == "Fully Paid") |
@@ -419,7 +419,7 @@ modelDf["defaulted"] = (statusDummies[["Fully Paid"]] * - 1) + 1
 
 # ### first pass using the variables used in data analysis thus far
 
-# In[242]:
+# In[52]:
 
 
 firstPassRegression = modelDf[["loan_amnt", " 60 months", "int_rate", "annual_inc", 
@@ -428,7 +428,7 @@ firstPassRegression = modelDf[["loan_amnt", " 60 months", "int_rate", "annual_in
 
 # ### create features / labels
 
-# In[243]:
+# In[53]:
 
 
 firstPassRegression = firstPassRegression[(firstPassRegression["loan_status"] == "Fully Paid") |
@@ -438,16 +438,17 @@ statusDummies = pd.get_dummies(firstPassRegression["loan_status"])
 firstPassRegression["defaulted"] = (statusDummies[["Fully Paid"]] * - 1) + 1
 
 
-# In[244]:
+# In[54]:
 
 
 labels = firstPassRegression["defaulted"]
 features = firstPassRegression.drop(columns=["defaulted", "loan_status"])
+features.skew()
 
 
 # ### split train and test
 
-# In[142]:
+# In[55]:
 
 
 # Using Skicit-learn to split data into training and testing sets
@@ -456,13 +457,13 @@ from sklearn.model_selection import train_test_split
 train_features, test_features, train_labels, test_labels = train_test_split(features, labels, test_size = 0.25, random_state = 42)
 
 
-# In[143]:
+# In[56]:
 
 
 train_features.describe()
 
 
-# In[233]:
+# In[57]:
 
 
 sb.heatmap(train_features.corr())
@@ -470,7 +471,7 @@ sb.heatmap(train_features.corr())
 
 # ### Establish Baseline
 
-# In[145]:
+# In[58]:
 
 
 from sklearn.dummy import DummyClassifier
@@ -481,14 +482,14 @@ print("baseline prediction accuracy is {}".format(freqentist.score(test_features
 
 # ### Try multivariate linear regression
 
-# In[278]:
+# In[59]:
 
 
 ols = linear_model.LinearRegression(normalize = False)
 model = ols.fit(train_features, train_labels)
 
 
-# In[279]:
+# In[60]:
 
 
 print("OLS regression has an R^2 of {} in sample".format(model.score(train_features, train_labels).round(4)))
@@ -498,7 +499,7 @@ print("OLS regression has an R^2 of {} out of sample".format(model.score(test_fe
 # 
 # ####  lets work harder on variable selection
 
-# In[280]:
+# In[61]:
 
 
 varSelection = modelDf[["application_type", "collections_12_mths_ex_med", "earliest_cr_line", "emp_length",
@@ -507,7 +508,7 @@ varSelection = modelDf[["application_type", "collections_12_mths_ex_med", "earli
          "acc_now_delinq", "recoveries", "loan_status"]]
 
 
-# In[281]:
+# In[62]:
 
 
 varSelection = varSelection[(varSelection["loan_status"] == "Fully Paid") |
@@ -517,7 +518,7 @@ statusDummies = pd.get_dummies(varSelection["loan_status"])
 varSelection["defaulted"] = (statusDummies[["Fully Paid"]] * - 1) + 1
 
 
-# In[282]:
+# In[63]:
 
 
 applicationDummies = pd.get_dummies(varSelection[["application_type", "home_ownership"]])
@@ -526,20 +527,20 @@ applicationDummies = applicationDummies.drop(columns = ["application_type_INDIVI
 varSelection = applicationDummies.join(varSelection)
 
 
-# In[283]:
+# In[64]:
 
 
 varSelection["earliest_cr_line"] = varSelection["earliest_cr_line"].str.extract("\w{3}-(\d{4})").astype(float)
 varSelection["emp_length"] = varSelection["emp_length"].str.extract("(\d+).*").astype(float)
 
 
-# In[284]:
+# In[65]:
 
 
 varSelection = varSelection.dropna()
 
 
-# In[285]:
+# In[66]:
 
 
 labels = varSelection["defaulted"]
@@ -547,38 +548,38 @@ features = varSelection.drop(columns=["defaulted", "loan_status"])
 features.info()
 
 
-# In[286]:
+# In[67]:
 
 
 from sklearn.feature_selection import SelectKBest
 #take 5 strongest variables
 from sklearn.feature_selection import chi2
-X_new = SelectKBest(chi2, k="all").fit_transform(features, labels)
+X_new = SelectKBest(chi2, k=5).fit_transform(features, labels)
 features = X_new
 
 
-# In[287]:
+# In[68]:
 
 
 from sklearn.model_selection import train_test_split
 train_features, test_features, train_labels, test_labels = train_test_split(features, labels, test_size = 0.8, random_state = 42)
 
 
-# In[288]:
+# In[69]:
 
 
 ols = linear_model.LinearRegression(normalize = False)
 model = ols.fit(train_features, train_labels)
 
 
-# In[289]:
+# In[70]:
 
 
 print("OLS regression has an R^2 of {} in sample".format(model.score(train_features, train_labels).round(4)))
 print("OLS regression has an R^2 of {} out of sample".format(model.score(test_features, test_labels).round(4)))
 
 
-# In[290]:
+# In[71]:
 
 
 from sklearn.linear_model import Lasso
@@ -592,7 +593,7 @@ print("LASSO regression has a score of {} out of sample".format(score.round(4)))
 
 # #### let's be more strict about features - rank and remove
 
-# In[291]:
+# In[72]:
 
 
 from sklearn.feature_selection import RFE
@@ -607,7 +608,7 @@ rfe.score(test_features, test_labels)
 
 # ### remove a few features according to rfe results
 
-# In[292]:
+# In[73]:
 
 
 labels = varSelection["defaulted"]
@@ -615,21 +616,21 @@ features = varSelection.drop(columns=["defaulted", "loan_status", "application_t
 features.info()
 
 
-# In[293]:
+# In[74]:
 
 
 from sklearn.model_selection import train_test_split
 train_features, test_features, train_labels, test_labels = train_test_split(features, labels, test_size = 0.8, random_state = 42)
 
 
-# In[294]:
+# In[75]:
 
 
 ols = linear_model.LinearRegression(normalize = False)
 model = ols.fit(train_features, train_labels)
 
 
-# In[295]:
+# In[76]:
 
 
 print("OLS regression has an R^2 of {} in sample".format(model.score(train_features, train_labels).round(4)))

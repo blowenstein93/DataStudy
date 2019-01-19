@@ -1,0 +1,21 @@
+Part One
+Various visualizations and statistics. Skew and correlation are the main stats used.
+
+-----
+
+Part Two
+
+1. 85% of loans were fully paid
+
+2. 2008 G rated loans defaulted the most frequently at 48% default rate
+
+3. See notebook for spreadsheet of all cohorts. Returns vary from low negative single digits to high positive single digits.
+
+-----
+
+Part Three
+
+Given familiarity with the features used in parts 1 and 2, I began with a simple multi-linear regression using those variables. 
+I filtered out outliers and bucketed features like revolving balance in order to smooth out the skew present. This initial regression had weak predictive power with an R^2 of 0.60.
+I thought that it might make sense to include more variables and attempt a few different variable selection routes. Lasso was unable to top simple linear regression - likely due to the relatively small number of features and multicolinearity.
+
